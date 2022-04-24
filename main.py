@@ -1,8 +1,18 @@
 from lib.bind_util import open_bind_dialog
 from lib.sorter import open_sorting_window
+from lib.datatypes import InstanceConfig, SieveMode
 import sys
 
 result = open_bind_dialog()
+
+result = InstanceConfig(
+    mode=SieveMode.COPY,
+    source="example/afreightdata/",
+    dest= {
+        "a": "example/dest1/",
+        "b": "example/dest2/"
+    }
+    )
 
 if not result:
     print("Quitting...")
