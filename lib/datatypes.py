@@ -27,3 +27,7 @@ class InstanceConfig:
         for _,dest in self.dest.items():
             if not path.exists(dest): return False
         return True
+
+    def get_size_string(self) -> str:
+        width, height = self.size
+        return f"{width}x{height}"

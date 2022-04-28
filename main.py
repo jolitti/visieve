@@ -8,11 +8,14 @@ result = open_bind_dialog()
 result = InstanceConfig(
     mode=SieveMode.COPY,
     source="example/afreightdata/",
-    dest= {
+    dest={
         "a": "example/dest1/",
-        "b": "example/dest2/"
+        "b": "example/dest2/",
+        "c": "example/dest3/"
     }
     )
+
+print(result)
 
 if not result:
     print("Quitting...")
@@ -21,3 +24,5 @@ if not result:
 print("Beginning the sieving process")
 
 open_sorting_window(result)
+
+print("Done. Thanks for using visieve!")
