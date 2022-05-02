@@ -7,15 +7,13 @@ result = open_bind_dialog()
 
 result = InstanceConfig(
     mode=SieveMode.COPY,
-    source="example/afreightdata/",
+    source="example/source/",
     dest={
         "a": "example/dest1/",
         "b": "example/dest2/",
         "c": "example/dest3/"
     }
     )
-
-print(result)
 
 if not result:
     print("Quitting...")

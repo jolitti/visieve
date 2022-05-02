@@ -3,7 +3,7 @@ from .datatypes import InstanceConfig, SieveMode
 import tkinter as tk
 import PIL
 from PIL import Image, ImageTk
-import os
+import os, sys
 import shutil
 from pathlib import Path
 
@@ -11,7 +11,8 @@ class SortingDialog:
     
     def __init__(self,config: InstanceConfig) -> None:
         self.config = config
-        if not self.config.is_valid(): raise ValueError("Invalid configuration!")
+        validity = self.config.is_valid()
+        if validity is not True: raise ValueError(validity)
 
         #base window configuration
         self.window = tk.Tk()
@@ -40,20 +41,37 @@ class SortingDialog:
         self.window.mainloop()
 
     def handle_keypress(self,event:tk.Event):
+        """Function to be bound to the bound keys. Will move or copy the files as needed"""
         key = event.keysym
         if key not in self.config.dest: raise ValueError("Error: key bound but not in destination config")
         destination = self.config.dest.get(key)
+
+        # copy or move depending on configuration
         match self.config.mode:
             case SieveMode.COPY:
                 shutil.copy2(self.current_img_path,destination)
                 print(f"Copying {self.current_img_path} into {destination}")
+            case SieveMode.MOVE:
+                shutil.copy2(self.current_img_path,destination)
+                os.remove(self.current_img_path)
+                print(f"Moving {self.current_img_path} into {destination}")
             case _:
                 raise ValueError(f"Sieve mode {self.config.mode} is not supported")
+
         self.update_image()
 
     def update_image(self):
         """Pass the next image in the generator to the label"""
-        (img,path) = next(self.img_generator)
+        
+        try:
+            img,path = next(self.img_generator)
+        except StopIteration as s:
+            print("Reached end of file set")
+            img,path = None,None
+
+        if img is None:
+            sys.exit()
+
         self.lab_img.configure(image=img)
         self.lab_img.image = img # Prevents the garbage collector from deleting the img object
         self.current_img_path = path
@@ -87,6 +105,9 @@ class SortingDialog:
             tk.Label(master=frame,text=folder,relief=tk.GROOVE).grid(row=i,column=1) # key label
 
         return frame
+
+    def _quit(self):
+        self.window.destroy()
 
 
 def open_sorting_window(config: InstanceConfig):
