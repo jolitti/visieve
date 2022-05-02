@@ -16,7 +16,7 @@ result = InstanceConfig(
     )
 
 if not result:
-    print("Quitting...")
+    print("Config not found. Quitting...")
     sys.exit()
 
 print("Beginning the sieving process")

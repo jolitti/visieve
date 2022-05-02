@@ -1,5 +1,6 @@
 from typing import Generator
 from .datatypes import InstanceConfig, SieveMode
+from .fileutil import count_image_files, is_valid_image_file
 import tkinter as tk
 import PIL
 from PIL import Image, ImageTk
@@ -26,6 +27,7 @@ class SortingDialog:
         
         # set up Label to house the image
         self.lab_img = tk.Label()
+        self.lab_img.image = None
         self.lab_img.grid(row=0,column=0)
         self.update_image()
 
@@ -62,12 +64,11 @@ class SortingDialog:
 
     def update_image(self):
         """Pass the next image in the generator to the label"""
-        
         try:
-            img,path = next(self.img_generator)
+            img,path,index = next(self.img_generator)
         except StopIteration as s:
             print("Reached end of file set")
-            img,path = None,None
+            img,path,index = None,None,None
 
         if img is None:
             sys.exit()
@@ -76,19 +77,21 @@ class SortingDialog:
         self.lab_img.image = img # Prevents the garbage collector from deleting the img object
         self.current_img_path = path
 
-    def images_iterator(self) -> Generator[tuple[ImageTk.PhotoImage,str],None,None]:
+    def images_iterator(self) -> Generator[tuple[ImageTk.PhotoImage,str,int],None,None]:
         """
-        Generator of pairs of PhotoImage and its corresponding path
+        Generator of pairs of PhotoImage and its corresponding path and order in directory
         (sorted in chronological order, oldest first)
         """
+        index = 0
         paths = sorted(Path(os.fsdecode(self.config.source)).iterdir(), key=os.path.getmtime, reverse=True)
         for p in paths:
-            image_file = Image.open(p)
-            (a,b) = image_file.size
-            width = self.config.size[0]
-            new_size = (width,int(b*width/a))
-            image_file = image_file.resize(new_size,PIL.Image.BICUBIC)
-            yield (ImageTk.PhotoImage(image_file),p)
+            with Image.open(p) as image_file:
+                (a,b) = image_file.size
+                width = self.config.size[0]
+                new_size = (width,int(b*width/a))
+                resized_image = image_file.resize(new_size,PIL.Image.BICUBIC)
+            yield (ImageTk.PhotoImage(resized_image),p,index)
+            index += 1
 
     def _bindings_list(self) -> tk.Frame:
         """Get a frame that contains a grid of labels showing the bindings"""
