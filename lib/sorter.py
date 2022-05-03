@@ -1,7 +1,9 @@
+import imp
 from typing import Generator
 from .datatypes import InstanceConfig, SieveMode
 from .fileutil import count_image_files, is_valid_image_file
 import tkinter as tk
+from tkinter import ttk
 import PIL
 from PIL import Image, ImageTk
 import os, sys
@@ -11,16 +13,22 @@ from pathlib import Path
 class SortingDialog:
     
     def __init__(self,config: InstanceConfig) -> None:
+        # config assignment and validation
         self.config = config
         validity = self.config.is_valid()
         if validity is not True: raise ValueError(validity)
 
-        #base window configuration
+        # counter and max assignment
+        self.total_image_count = count_image_files(self.config.source)
+        self.counter = 0 # counts how many images have been processed
+
+        # base window configuration
         self.window = tk.Tk()
         self.window.title("Visieve: Sorting window")
-        self.window.rowconfigure(0,weight=1,minsize=self.config.size[1])
-        self.window.columnconfigure(0,weight=2,minsize=self.config.size[0]*2/3)
-        self.window.columnconfigure(1,weight=1,minsize=self.config.size[0]/3)
+        self.window.rowconfigure(0,weight=5,minsize=self.config.size[1]*4/5) # main row
+        self.window.rowconfigure(1,weight=1,minsize=self.config.size[1]*0.1) # progbar row
+        self.window.columnconfigure(0,weight=2,minsize=self.config.size[0]*2/3) # image col
+        self.window.columnconfigure(1,weight=1,minsize=self.config.size[0]/3) # legend col
 
         # set up image object generator to iterate through the media
         self.img_generator = self.images_iterator()
@@ -29,17 +37,19 @@ class SortingDialog:
         self.lab_img = tk.Label()
         self.lab_img.image = None
         self.lab_img.grid(row=0,column=0)
-        self.update_image()
-
         # set up legend
         self._bindings_list().grid(row=0,column=1)
+
+        # set up progress bar
+        self.progress_bar = ttk.Progressbar(self.window,length=self.config.size[0])
+        self.progress_bar.grid(row=1,column=0,columnspan=2)
 
         # create the bindings
         for (k,_) in self.config.dest.items():
             self.window.bind(k,self.handle_keypress)
 
         self.window.eval("tk::PlaceWindow . center")
-
+        self.update_image()
         self.window.mainloop()
 
     def handle_keypress(self,event:tk.Event):
@@ -64,6 +74,10 @@ class SortingDialog:
 
     def update_image(self):
         """Pass the next image in the generator to the label"""
+
+        self.progress_bar["value"] = self.counter/self.total_image_count * 100
+        self.counter += 1
+
         try:
             img,path,index = next(self.img_generator)
         except StopIteration as s:
