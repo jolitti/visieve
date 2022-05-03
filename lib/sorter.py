@@ -1,4 +1,3 @@
-import imp
 from typing import Generator
 from .datatypes import InstanceConfig, SieveMode
 from .fileutil import count_image_files, is_valid_image_file
@@ -20,6 +19,9 @@ class SortingDialog:
 
         # counter and max assignment
         self.total_image_count = count_image_files(self.config.source)
+        if self.total_image_count <= 0:
+            print("No images found! Quitting")
+            sys.exit()
         self.counter = 0 # counts how many images have been processed
 
         # base window configuration
@@ -38,7 +40,7 @@ class SortingDialog:
         self.lab_img.image = None
         self.lab_img.grid(row=0,column=0)
         # set up legend
-        self._bindings_list().grid(row=0,column=1)
+        self._get_bindings_list().grid(row=0,column=1)
 
         # set up progress bar
         self.progress_bar = ttk.Progressbar(self.window,length=self.config.size[0])
@@ -75,39 +77,42 @@ class SortingDialog:
     def update_image(self):
         """Pass the next image in the generator to the label"""
 
+        # update the progress bar
         self.progress_bar["value"] = self.counter/self.total_image_count * 100
         self.counter += 1
 
+        # get the PhotoImage, path of the next file
         try:
-            img,path,index = next(self.img_generator)
+            img,path= next(self.img_generator)
         except StopIteration as s:
+            # a StopIteration gets thrown by a generator once it reaches the end
             print("Reached end of file set")
-            img,path,index = None,None,None
-
-        if img is None:
             sys.exit()
 
+        # assign the file to the label and memorize the path for the move/copy operation
         self.lab_img.configure(image=img)
         self.lab_img.image = img # Prevents the garbage collector from deleting the img object
         self.current_img_path = path
 
-    def images_iterator(self) -> Generator[tuple[ImageTk.PhotoImage,str,int],None,None]:
+    def images_iterator(self) -> Generator[tuple[ImageTk.PhotoImage,str],None,None]:
         """
         Generator of pairs of PhotoImage and its corresponding path and order in directory
         (sorted in chronological order, oldest first)
         """
-        index = 0
         paths = sorted(Path(os.fsdecode(self.config.source)).iterdir(), key=os.path.getmtime, reverse=True)
         for p in paths:
+            # skip this file if it's not an image
+            if not is_valid_image_file(p): continue
+
+            # open the file, resize it and return it as a PhotoImage
             with Image.open(p) as image_file:
                 (a,b) = image_file.size
                 width = self.config.size[0]
                 new_size = (width,int(b*width/a))
                 resized_image = image_file.resize(new_size,PIL.Image.BICUBIC)
-            yield (ImageTk.PhotoImage(resized_image),p,index)
-            index += 1
+            yield (ImageTk.PhotoImage(resized_image),p)
 
-    def _bindings_list(self) -> tk.Frame:
+    def _get_bindings_list(self) -> tk.Frame:
         """Get a frame that contains a grid of labels showing the bindings"""
         frame = tk.Frame(master=self.window)
         
