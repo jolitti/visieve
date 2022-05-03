@@ -1,4 +1,5 @@
 from enum import Enum
+import os
 from os import path
 from dataclasses import dataclass
 
@@ -11,6 +12,18 @@ class SieveMode(Enum):
     INVALID = "invalid"
 
 VALID_STATES = {SieveMode.COPY, SieveMode.MOVE}
+
+class DuplicateMode(Enum):
+    """Policy to apply to duplicate filenames"""
+    MAINTAIN = "maintain"
+    """The already existing file takes precendence"""
+    OVERWRITE = "overwrite"
+    """The new file takes precedence"""
+    ASSIGN_UNIQUE_NAME = "assign new name"
+    """Attempt to add a numeric suffix that distinguishes the new file"""
+    HALT = "halt"
+    """Send an error message to the user and crash the program"""
+
 
 @dataclass
 class InstanceConfig:
@@ -31,3 +44,8 @@ class InstanceConfig:
     def get_size_string(self) -> str:
         width, height = self.size
         return f"{width}x{height}"
+
+    def are_destinations_empty(self) -> bool:
+        for _,dirpath in self.dest.items():
+            if os.listdir(dirpath): return False
+        return True

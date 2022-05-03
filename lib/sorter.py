@@ -2,6 +2,7 @@ from typing import Generator
 from .datatypes import InstanceConfig, SieveMode
 from .fileutil import count_image_files, is_valid_image_file
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import ttk
 import PIL
 from PIL import Image, ImageTk
@@ -16,6 +17,12 @@ class SortingDialog:
         self.config = config
         validity = self.config.is_valid()
         if validity is not True: raise ValueError(validity)
+        if not self.config.are_destinations_empty():
+            messagebox.showwarning(
+                title="File warning",
+                message="One or more destination directories are not empty. \
+                        Those files may be overwritten during execution"
+                )
 
         # counter and max assignment
         self.total_image_count = count_image_files(self.config.source)

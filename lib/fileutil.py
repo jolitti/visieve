@@ -1,5 +1,6 @@
 from PIL import Image
 import os
+from os import path
 from pathlib import Path
 
 IMAGE_EXTENSIONS = { ex for ex,f in Image.registered_extensions().items() }
@@ -24,3 +25,9 @@ if __name__ == "__main__":
     supported = { ex for ex,f in exts.items() }
     print(supported) """
     print(count_image_files("./example/dest1/"))
+
+def get_unique_filename(dir:str,filename:str) -> str:
+    if dir[-1] != "/": dir+="/"
+    if not path.exists(dir+filename): return filename
+    else:
+        counter = 1
