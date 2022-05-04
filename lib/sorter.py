@@ -1,6 +1,6 @@
 from typing import Generator
-from .datatypes import InstanceConfig, SieveMode
-from .fileutil import count_image_files, is_valid_image_file
+from .datatypes import InstanceConfig, SieveMode, DuplicateMode
+from .fileutil import count_image_files, is_valid_image_file, get_unique_filename
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
@@ -9,6 +9,7 @@ from PIL import Image, ImageTk
 import os, sys
 import shutil
 from pathlib import Path
+import ntpath
 
 class SortingDialog:
     
@@ -65,21 +66,53 @@ class SortingDialog:
         """Function to be bound to the bound keys. Will move or copy the files as needed"""
         key = event.keysym
         if key not in self.config.dest: raise ValueError("Error: key bound but not in destination config")
-        destination = self.config.dest.get(key)
+        dest_dir = self.config.dest.get(key)
+        if dest_dir[-1] != "/": dest_dir+="/" # just to be sure to be able to concatenate
+        filename = ntpath.basename(self.current_img_path)
+        dest_name = dest_dir + filename
+
+        # check if file with same name already exists at destination
+        # if so, handle collision according to self.duplicate_mode
+        if os.path.exists(dest_name):
+            dest_name = self.solve_name_conflict(dest_name)
 
         # copy or move depending on configuration
-        match self.config.mode:
+        match self.config.sieve_mode:
             case SieveMode.COPY:
-                shutil.copy2(self.current_img_path,destination)
-                print(f"Copying {self.current_img_path} into {destination}")
+                shutil.copy2(self.current_img_path,dest_name)
+                print(f"Copying {self.current_img_path} into {dest_dir}")
             case SieveMode.MOVE:
-                shutil.copy2(self.current_img_path,destination)
+                shutil.copy2(self.current_img_path,dest_name)
                 os.remove(self.current_img_path)
-                print(f"Moving {self.current_img_path} into {destination}")
+                print(f"Moving {self.current_img_path} into {dest_dir}")
             case _:
-                raise ValueError(f"Sieve mode {self.config.mode} is not supported")
+                raise ValueError(f"Sieve mode {self.config.sieve_mode} is not supported")
 
         self.update_image()
+
+    def solve_name_conflict(self,destination:str) -> str | None:
+        """
+        To be called if the file at path destination exists to solve the collision.
+        Will handle the existing file according to self.config and will return the final filename
+        (or None if the file is not to be copied)
+        """
+        match self.config.duplicate_mode:
+            case DuplicateMode.MAINTAIN:
+                # the already existing file has precedence, do not copy
+                return None
+            case DuplicateMode.OVERWRITE:
+                # the existing file must be deleted, use its name
+                os.remove(destination)
+                return destination
+            case DuplicateMode.ASSIGN_UNIQUE_NAME:
+                # preserve the old file, enumerate the new one until you get a unique name
+                return get_unique_filename(destination)
+            case DuplicateMode.HALT:
+                # deliberarely crash the program
+                raise ValueError("Error! File already exists and DuplicateMode is HALT")
+            case _:
+                # catch-all for invalid mode
+                raise ValueError(f"Error! Invalid DuplicateMode: {self.config.duplicate_mode=}")
 
     def update_image(self):
         """Pass the next image in the generator to the label"""

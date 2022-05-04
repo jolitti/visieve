@@ -26,8 +26,12 @@ if __name__ == "__main__":
     print(supported) """
     print(count_image_files("./example/dest1/"))
 
-def get_unique_filename(dir:str,filename:str) -> str:
-    if dir[-1] != "/": dir+="/"
-    if not path.exists(dir+filename): return filename
+def get_unique_filename(filename:str) -> str:
+    if not path.exists(filename): return filename
     else:
+        prefix, suffix = os.path.splitext(filename)
         counter = 1
+        while True:
+            newname = f"{prefix}({counter}){suffix}"
+            if not path.exists(newname): return newname
+            counter += 1

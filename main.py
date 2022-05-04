@@ -6,7 +6,7 @@ import sys
 result = open_bind_dialog()
 
 result = InstanceConfig(
-    mode=SieveMode.COPY,
+    sieve_mode=SieveMode.COPY,
     source="example/source/",
     dest={
         "a": "example/dest1/",
