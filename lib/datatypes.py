@@ -9,7 +9,6 @@ class SieveMode(Enum):
     """General operation to apply to items in the source directory"""
     COPY = "copy"
     MOVE = "move"
-    INVALID = "invalid"
 
 VALID_STATES = {SieveMode.COPY, SieveMode.MOVE}
 
@@ -50,3 +49,7 @@ class InstanceConfig:
         for _,dirpath in self.dest.items():
             if os.listdir(dirpath): return False
         return True
+
+
+if __name__ == "__main__":
+    print(SieveMode["halt"])

@@ -76,17 +76,18 @@ class SortingDialog:
         if os.path.exists(dest_name):
             dest_name = self.solve_name_conflict(dest_name)
 
-        # copy or move depending on configuration
-        match self.config.sieve_mode:
-            case SieveMode.COPY:
-                shutil.copy2(self.current_img_path,dest_name)
-                print(f"Copying {self.current_img_path} into {dest_dir}")
-            case SieveMode.MOVE:
-                shutil.copy2(self.current_img_path,dest_name)
-                os.remove(self.current_img_path)
-                print(f"Moving {self.current_img_path} into {dest_dir}")
-            case _:
-                raise ValueError(f"Sieve mode {self.config.sieve_mode} is not supported")
+        if dest_name is not None:
+            # copy or move depending on configuration
+            match self.config.sieve_mode:
+                case SieveMode.COPY:
+                    shutil.copy2(self.current_img_path,dest_name)
+                    print(f"Copying {self.current_img_path} into {dest_dir}")
+                case SieveMode.MOVE:
+                    shutil.copy2(self.current_img_path,dest_name)
+                    os.remove(self.current_img_path)
+                    print(f"Moving {self.current_img_path} into {dest_dir}")
+                case _:
+                    raise ValueError(f"Sieve mode {self.config.sieve_mode} is not supported")
 
         self.update_image()
 

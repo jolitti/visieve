@@ -1,6 +1,6 @@
 from lib.bind_util import open_bind_dialog
 from lib.sorter import open_sorting_window
-from lib.datatypes import InstanceConfig, SieveMode
+from lib.datatypes import InstanceConfig, SieveMode # remove after completion to mask details from user
 import sys
 
 result = open_bind_dialog()
