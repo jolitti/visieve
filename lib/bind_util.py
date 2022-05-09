@@ -1,6 +1,7 @@
 import tkinter as tk
 from .datatypes import InstanceConfig
 from .datatypes import SieveMode, DuplicateMode
+from .custom_widgets import KeyDirAssociation
 
 sievemode_list = [x.value for x in SieveMode]
 sievemode_dict = { x.value:x for x in SieveMode }
@@ -37,12 +38,15 @@ class BindingDialog:
         self.dupmode_selector = tk.OptionMenu(self.window,self.dupmode_text,*dupmode_list)
         self.dupmode_selector.pack()
 
+        KeyDirAssociation().pack()
+
         self.window.mainloop()
 
     def set_instance_config(self) -> InstanceConfig:
         """
         To be called while the window is closing.
         Will collect information from the various widgets and save them
+        in an IntanceConfig object, appending it into self.answer_holder
         """
         pass
 
