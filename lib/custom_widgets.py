@@ -68,7 +68,7 @@ class FolderPicker(tk.Button):
 
 
 
-class KeyDirAssociation(tk.Frame):
+class KeyDirPair(tk.Frame):
     """
     Frame with two buttons side by side, one for binding a key and
     one for binding a folder
@@ -94,4 +94,51 @@ class KeyDirAssociation(tk.Frame):
         if key and folder: return key,folder
         else: return None
 
-# TODO: create a new class that's a grid of KeyDirAssoc
+
+class KeyDirList(tk.Frame):
+
+    pairs: list[KeyDirPair]
+    """List that houses the KeyDirPair widgets"""
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        self.columnconfigure(0,weight=1)
+        self.pairs = []
+    
+    def add_pair(self):
+        """Append a new KeyDirPair under the existing ones"""
+        index = len(self.pairs)
+        newpair = KeyDirPair(self)
+        self.rowconfigure(index,weight=1)
+        newpair.grid(row=index,column=0)
+        self.pairs.append(newpair)
+
+    def remove_pair(self):
+        """Remove the last KeyDirPair"""
+        oldpair = self.pairs.pop()
+        oldpair.grid_forget()
+
+    def get_binding_pairs(self) -> dict[str,str]:
+        """Returns the key-dir pairs (to be put into InstanceConfig)"""
+        ans = dict()
+        for pair in self.pairs:
+            association = pair.get_values()
+            if association is not None: 
+                key,val = association
+                ans[key] = val
+        return ans
+
+class CompleteKeyDirBinder(tk.Frame):
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+
+        for i in range(2):
+            self.rowconfigure(i,weight=1)
+            self.columnconfigure(i,weight=1)
+
+        self.kdgrid = KeyDirList(self)
+        self.btn_add = tk.Button(self,text="+",command=self.kdgrid.add_pair)
+        self.btn_remove = tk.Button(self,text="-",command=self.kdgrid.remove_pair)
+
+        # TODO put in grid

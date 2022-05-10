@@ -1,7 +1,8 @@
 import tkinter as tk
+
 from .datatypes import InstanceConfig
 from .datatypes import SieveMode, DuplicateMode
-from .custom_widgets import KeyDirAssociation
+from .custom_widgets import KeyDirList, KeyDirPair
 
 sievemode_list = [x.value for x in SieveMode]
 sievemode_dict = { x.value:x for x in SieveMode }
@@ -38,7 +39,14 @@ class BindingDialog:
         self.dupmode_selector = tk.OptionMenu(self.window,self.dupmode_text,*dupmode_list)
         self.dupmode_selector.pack()
 
-        KeyDirAssociation().pack()
+        # KeyDirPair().pack()
+        kdlist = KeyDirList()
+        kdlist.add_pair()
+        kdlist.add_pair()
+        kdlist.pack()
+
+        tk.Button(text="Add pair",command=kdlist.add_pair).pack()
+        tk.Button(text="Remove pair",command=kdlist.remove_pair).pack()
 
         self.window.mainloop()
 
