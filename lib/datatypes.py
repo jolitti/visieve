@@ -36,19 +36,27 @@ class InstanceConfig:
     def is_valid(self) -> bool | str:
         """Verify whether this configuration actually represents a working setting"""
         if self.sieve_mode not in VALID_STATES: return "Invalid state"
+        if self.source is None: return "Source dir is None"
         if not path.exists(self.source): return "Non existent source dir"
+        if self.dest is None: return "Destination dictionary is None"
         for _,dest in self.dest.items():
             if not path.exists(dest): return "Non existent destination dir"
         return True
 
     def get_size_string(self) -> str:
+        """Format the self.size tuple into a '100x100'-type string"""
         width, height = self.size
         return f"{width}x{height}"
 
     def are_destinations_empty(self) -> bool:
+        """Returns True if all of the destinations directories are empty"""
         for _,dirpath in self.dest.items():
             if os.listdir(dirpath): return False
         return True
+
+    def is_source_empty(self) -> bool:
+        """Returns True if the source directory is empty"""
+        return not os.listdir(self.source)
 
 
 if __name__ == "__main__":

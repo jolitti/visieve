@@ -12,16 +12,16 @@ class KeyBinder(tk.Button):
 
     keycode: str
     bind_list: set[str]
-    def __init__(self,bind_list:set[str]=None,*args,**kwargs):
+    def __init__(self,*args,**kwargs):
         super().__init__(command=self.start_keybind,*args,**kwargs)
         #self.config(command=self.folder_select())
         self.keycode = None
-        self.bind_list = bind_list
         if "text" not in kwargs: self.config(text="Choose key")
 
     def start_keybind(self):
         """Alert the application to start listening to keypresses"""
-        if self.keycode: self.winfo_toplevel().unbind(self.keycode)
+        if self.keycode:
+            self.winfo_toplevel().unbind(self.keycode)
         self.winfo_toplevel().bind("<Key>",self.bind_key)
         self.config(text="Press a key...")
 
@@ -31,15 +31,10 @@ class KeyBinder(tk.Button):
         if not event.char or event.char not in KeyBinder.ACCEPTED_KEYS:
             self.keycode = None
             self.config(text="Choose key")
-        # If we don't have a bind list or the new char is not in the list
-        elif not self.bind_list or event.keycode not in self.bind_list:
+        else:
             self.keycode = event.keysym.lower()
             self.config(text=event.keysym)
             # if we do have a bind_list, add the new char to it
-            if self.bind_list: self.bind_list.add(self.keycode)
-        else:
-            self.keycode = None
-            self.config(text="Key already bound")
         # in any case, stop listening for keypresses
         self.winfo_toplevel().unbind("<Key>")
         #print(self.key_code)
@@ -73,8 +68,8 @@ class KeyDirPair(tk.Frame):
     Frame with two buttons side by side, one for binding a key and
     one for binding a folder
     """
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,*kwargs)
+    def __init__(self,master,*args,**kwargs):
+        super().__init__(master,*args,*kwargs)
 
         # grid configuration
         self.rowconfigure(0,weight=1)
@@ -141,4 +136,10 @@ class CompleteKeyDirBinder(tk.Frame):
         self.btn_add = tk.Button(self,text="+",command=self.kdgrid.add_pair)
         self.btn_remove = tk.Button(self,text="-",command=self.kdgrid.remove_pair)
 
-        # TODO put in grid
+        # put in grid
+        self.kdgrid.grid(row=0,column=0,columnspan=2)
+        self.btn_add.grid(row=1,column=0)
+        self.btn_remove.grid(row=1,column=1)
+    
+    def get_binding_pairs(self) -> dict[str,str]:
+        return self.kdgrid.get_binding_pairs()

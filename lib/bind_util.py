@@ -2,11 +2,11 @@ import tkinter as tk
 
 from .datatypes import InstanceConfig
 from .datatypes import SieveMode, DuplicateMode
-from .custom_widgets import KeyDirList, KeyDirPair
+from .custom_widgets import CompleteKeyDirBinder, FolderPicker
 
-sievemode_list = [x.value for x in SieveMode]
+sievemode_list = [ x.value for x in SieveMode ]
 sievemode_dict = { x.value:x for x in SieveMode }
-dupmode_list = [x.value for x in DuplicateMode]
+dupmode_list = [ x.value for x in DuplicateMode ]
 dupmode_dict = { x.value:x for x in DuplicateMode }
 
 # artefact from when the configuration was just a tuple
@@ -39,14 +39,17 @@ class BindingDialog:
         self.dupmode_selector = tk.OptionMenu(self.window,self.dupmode_text,*dupmode_list)
         self.dupmode_selector.pack()
 
-        # KeyDirPair().pack()
-        kdlist = KeyDirList()
-        kdlist.add_pair()
-        kdlist.add_pair()
-        kdlist.pack()
+        # source directory selector
+        self.source_selector = FolderPicker(self.window,text="Select source folder")
+        self.source_selector.pack()
 
-        tk.Button(text="Add pair",command=kdlist.add_pair).pack()
-        tk.Button(text="Remove pair",command=kdlist.remove_pair).pack()
+        # KeyDirPair().pack()
+        self.kdbind = CompleteKeyDirBinder()
+        self.kdbind.pack()
+
+        tk.Button(text="Print settings",command=self._print_kdbind).pack()
+
+        self.window.protocol("WM_DELETE_WINDOW",self.set_instance_config)
 
         self.window.mainloop()
 
@@ -56,7 +59,22 @@ class BindingDialog:
         Will collect information from the various widgets and save them
         in an IntanceConfig object, appending it into self.answer_holder
         """
-        pass
+        sievemode = sievemode_dict[self.sievemode_text.get()]
+        dupmode = dupmode_dict[self.dupmode_text.get()]
+        source = self.source_selector.get_folder_path()
+        bindings = self.kdbind.get_binding_pairs()
+
+        self.answer_holder.append(InstanceConfig(
+            source,
+            bindings,
+            sievemode,
+            dupmode
+        ))
+
+        self.window.destroy()
+
+    def _print_kdbind(self):
+        print(self.kdbind.get_binding_pairs())
 
 
 def open_bind_dialog() -> InstanceConfig:
